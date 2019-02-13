@@ -1,46 +1,126 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-var app = {
-    // Application Constructor
-    initialize: function() {
-        document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
-    },
-
-    // deviceready Event Handler
-    //
-    // Bind any cordova events here. Common events are:
-    // 'pause', 'resume', etc.
-    onDeviceReady: function() {
-        this.receivedEvent('deviceready');
-    },
-
-    // Update DOM on a Received Event
-    receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
-
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
-        console.log('Received Event: ' + id);
-    }
-};
-
-app.initialize();
+var KanbanTest = new jKanban({
+        element: '#myKanban',
+        gutter: '10px',
+        widthBoard: '300px',
+        click: function (el) {
+            console.log("Trigger on all items click!");
+        },
+        buttonClick: function (el, boardId) {
+            console.log(el);
+            console.log(boardId);
+            // create a form to enter element 
+            var formItem = document.createElement('form');
+            formItem.setAttribute("class", "itemform");
+            formItem.innerHTML = '<div class="form-group"><textarea class="form-control" rows="2" autofocus></textarea></div><div class="form-group"><button type="submit" class="btn btn-primary btn-xs pull-right">Submit</button><button type="button" id="CancelBtn" class="btn btn-default btn-xs pull-right">Cancel</button></div>'
+            KanbanTest.addForm(boardId, formItem);
+            formItem.addEventListener("submit", function (e) {
+                e.preventDefault();
+                var text = e.target[0].value
+                KanbanTest.addElement(boardId, {
+                    "title": text,
+                })
+                formItem.parentNode.removeChild(formItem);
+            });
+            document.getElementById('CancelBtn').onclick = function () {
+                formItem.parentNode.removeChild(formItem)
+            }
+        },
+        addItemButton: true,
+        boards: [
+            {
+                "id": "_todo",
+                "title": "To Do",
+                "class": "info,good",
+                "dragTo": ['_working'],
+                "item": [
+                    {
+                        "id": "_test_delete",
+                        "title": "Try drag this (Look the console)",
+                        "drag": function (el, source) {
+                            console.log("START DRAG: " + el.dataset.eid);
+                        },
+                        "dragend": function (el) {
+                            console.log("END DRAG: " + el.dataset.eid);
+                        },
+                        "drop": function(el){
+                            console.log('DROPPED: ' + el.dataset.eid )
+                        }
+                    },
+                    {
+                        "title": "Try Click This!",
+                        "click": function (el) {
+                            alert("click");
+                        },
+                    }
+                ]
+            },
+            {
+                "id": "_working",
+                "title": "Working ",
+                "class": "warning",
+                "item": [
+                    {
+                        "title": "Do Something!",
+                    },
+                    {
+                        "title": "Run?",
+                    }
+                ]
+            },
+            {
+                "id": "_done",
+                "title": "Done ",
+                "class": "success",
+                "dragTo": ['_working'],
+                "item": [
+                    {
+                        "title": "All right",
+                    },
+                    {
+                        "title": "Ok!",
+                    }
+                ]
+            }
+        ]
+    });
+    var toDoButton = document.getElementById('addToDo');
+    toDoButton.addEventListener('click', function () {
+        KanbanTest.addElement(
+            "_todo",
+            {
+                "title": "Test Add",
+            }
+        );
+    });
+    var addBoardDefault = document.getElementById('addDefault');
+    addBoardDefault.addEventListener('click', function () {
+        KanbanTest.addBoards(
+            [{
+                "id": "_default",
+                "title": "Kanban Default",
+                "item": [
+                    {
+                        "title": "Default Item",
+                    },
+                    {
+                        "title": "Default Item 2",
+                    },
+                    {
+                        "title": "Default Item 3",
+                    }
+                ]
+            }]
+        )
+    });
+    var removeBoard = document.getElementById('removeBoard');
+    removeBoard.addEventListener('click', function () {
+        KanbanTest.removeBoard('_done');
+    });
+    var removeElement = document.getElementById('removeElement');
+    removeElement.addEventListener('click', function () {
+        KanbanTest.removeElement('_test_delete');
+    });
+    var allEle = KanbanTest.getBoardElements('_todo');
+    allEle.forEach(function (item, index) {
+        //console.log(item);
+    })
